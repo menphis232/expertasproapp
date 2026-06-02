@@ -31,6 +31,7 @@
     "@capacitor/android": "^8.0.1",
     "@capacitor/cli": "^8.0.1",
     "@capacitor/core": "^8.0.1",
+    "@capacitor/ios": "^8.3.4",
     "@ionic/angular": "^7.0.0",
     "@ionic/angular-toolkit": "^10.0.0",
     "@ionic/pwa-elements": "^3.3.0",

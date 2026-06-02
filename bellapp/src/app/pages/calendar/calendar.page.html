@@ -1,0 +1,455 @@
+<ion-header class="agenda-header">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button color="light"></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Calendario</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" color="light" (click)="goToday()">HOY</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="agenda-content">
+  <app-agenda-tabs active="calendar"></app-agenda-tabs>
+
+  <div class="calendar-body page-content">
+    <section class="calendar-card">
+      <div class="calendar-nav">
+        <button type="button" class="nav-btn" (click)="prevMonth()" aria-label="Mes anterior">
+          <ion-icon name="chevron-back-outline"></ion-icon>
+        </button>
+        <h2 class="calendar-month-title">{{ monthTitle() }}</h2>
+        <button type="button" class="nav-btn" (click)="nextMonth()" aria-label="Mes siguiente">
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </button>
+      </div>
+
+      <div class="calendar-grid">
+        <div class="calendar-weekdays">
+          @for (label of weekdayLabels; track label) {
+            <span class="weekday-label">{{ label }}</span>
+          }
+        </div>
+
+        @for (week of calendarWeeks(); track $index) {
+          <div class="calendar-week">
+            @for (day of week; track day.iso) {
+              <button
+                type="button"
+                class="calendar-day"
+                [class.outside]="!day.inMonth"
+                [class.today]="day.isToday"
+                [class.selected]="day.isSelected"
+                [class.has-appointments]="day.appointments.length > 0"
+                (click)="selectDay(day.iso)">
+                <span class="day-number">{{ day.day }}</span>
+                @if (day.appointments.length > 0) {
+                  <span class="day-dots">
+                    @for (apt of day.appointments.slice(0, 3); track apt.id) {
+                      <span class="day-dot" [attr.data-status]="apt.estado"></span>
+                    }
+                  </span>
+                }
+              </button>
+            }
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="day-detail">
+      <div class="day-detail-header">
+        <h3>{{ selectedDayLabel() }}</h3>
+        <span class="day-count">
+          {{ selectedDayAppointments().length }}
+          {{ selectedDayAppointments().length === 1 ? 'cita' : 'citas' }}
+        </span>
+      </div>
+
+      @if (selectedDayAppointments().length === 0) {
+        <p class="empty-state">No hay citas este día.</p>
+      } @else {
+        <ul class="day-appointments">
+          @for (apt of selectedDayAppointments(); track apt.id) {
+            <li class="day-appointment-item">
+              <div class="apt-main">
+                <button type="button" class="apt-client-name" (click)="openOptions(apt)">
+                  {{ apt.clienteNombre }}
+                </button>
+                <span>{{ apt.servicio }} · {{ apt.hora }}</span>
+                @if (apt.profesionalNombre) {
+                  <span class="apt-professional">{{ apt.profesionalNombre }}</span>
+                }
+              </div>
+              <span class="apt-badge" [attr.data-status]="apt.estado">
+                {{ statusLabel(apt.estado) }}
+              </span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+      <ion-fab-button (click)="openCreate()">
+        <ion-icon name="add-outline"></ion-icon>
+      </ion-fab-button>
+    </ion-fab>
+  </div>
+
+  <!-- ── NUEVA / EDITAR CITA MODAL ─────────────────────── -->
+  <ion-modal [isOpen]="modalOpen()" (didDismiss)="closeModal()">
+    <ng-template>
+
+      <div class="nc-modal-header">
+        {{ editingId() ? 'Editar Cita' : 'Nueva Cita' }}
+      </div>
+
+      <ion-content class="nc-content" (click)="closeAllDropdowns()">
+        <form [formGroup]="form" (ngSubmit)="save()" id="citaForm" (click)="$event.stopPropagation()">
+
+          <div class="cf-field">
+            <label class="cf-label">Fecha</label>
+            <div class="cf-date-wrapper">
+              <input
+                type="date"
+                class="cf-date-input"
+                formControlName="dateStr">
+              <ion-icon name="calendar-outline" class="cf-date-icon"></ion-icon>
+            </div>
+          </div>
+
+          <div class="cf-field">
+            <label class="cf-label">Hora</label>
+            <input
+              type="text"
+              class="cf-input"
+              formControlName="time"
+              placeholder="Formato 24 horas (HH:mm)"
+              inputmode="numeric">
+          </div>
+
+          <div class="cf-field">
+            <label class="cf-label">Profesional</label>
+
+            <div
+              class="ms-trigger"
+              [class.ms-open]="professionalDropdownOpen()"
+              (click)="toggleProfessionalDropdown(); $event.stopPropagation()">
+              <span class="ms-value" [class.ms-selected]="form.controls.professionalId.value">
+                {{ getProfessionalLabel() }}
+              </span>
+              <ion-icon name="chevron-down-outline" class="ms-chevron" [class.rotated]="professionalDropdownOpen()"></ion-icon>
+            </div>
+
+            @if (professionalDropdownOpen()) {
+              <div class="ms-dropdown" (click)="$event.stopPropagation()">
+                <div class="ms-search-row">
+                  <div class="ms-search-box">
+                    <ion-icon name="search-outline" class="ms-search-icon"></ion-icon>
+                    <input
+                      class="ms-search-input"
+                      type="text"
+                      [value]="professionalSearch()"
+                      (input)="professionalSearch.set($any($event.target).value)"
+                      placeholder="Buscar profesional..."
+                      autocomplete="off">
+                  </div>
+                  <button type="button" class="ms-search-clear" (click)="professionalSearch.set('')">
+                    <ion-icon name="close-outline"></ion-icon>
+                  </button>
+                </div>
+                <div class="ms-list">
+                  <div class="ms-item ms-item-none" (click)="clearProfessional()">
+                    <ion-icon
+                      name="checkmark-outline"
+                      class="ms-check"
+                      [class.ms-check-visible]="!form.controls.professionalId.value">
+                    </ion-icon>
+                    <span>Sin asignar</span>
+                  </div>
+                  @if (filteredProfessionals.length === 0) {
+                    <div class="ms-empty">No se encontraron profesionales</div>
+                  }
+                  @for (p of filteredProfessionals; track p.id) {
+                    <div class="ms-item" (click)="selectProfessional(p.id)">
+                      <ion-icon
+                        name="checkmark-outline"
+                        class="ms-check"
+                        [class.ms-check-visible]="form.controls.professionalId.value === p.id">
+                      </ion-icon>
+                      <span>{{ p.nombreApellido }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="cf-field">
+            <label class="cf-label">Servicios <span class="cf-required">*</span></label>
+
+            <div
+              class="ms-trigger"
+              [class.ms-open]="serviceDropdownOpen()"
+              (click)="toggleServiceDropdown(); $event.stopPropagation()">
+              <span class="ms-value" [class.ms-selected]="selectedServiceIds().length > 0">
+                {{ getServicesLabel() }}
+              </span>
+              <ion-icon name="chevron-down-outline" class="ms-chevron" [class.rotated]="serviceDropdownOpen()"></ion-icon>
+            </div>
+
+            @if (!editingId()) {
+              <p class="cf-hint">Puedes seleccionar múltiples servicios. Se creará una cita por cada servicio.</p>
+            }
+
+            @if (serviceDropdownOpen()) {
+              <div class="ms-dropdown" (click)="$event.stopPropagation()">
+                <div class="ms-search-row">
+                  <div class="ms-search-box">
+                    <ion-icon name="search-outline" class="ms-search-icon"></ion-icon>
+                    <input
+                      class="ms-search-input"
+                      type="text"
+                      [value]="serviceSearch()"
+                      (input)="serviceSearch.set($any($event.target).value)"
+                      placeholder=""
+                      autocomplete="off">
+                  </div>
+                  <button type="button" class="ms-search-clear" (click)="serviceSearch.set('')">
+                    <ion-icon name="close-outline"></ion-icon>
+                  </button>
+                </div>
+                <div class="ms-list">
+                  @if (filteredServices.length === 0) {
+                    <div class="ms-empty">No se encontraron servicios</div>
+                  }
+                  @for (s of filteredServices; track s.id) {
+                    <div class="ms-item" (click)="toggleService(s.id)">
+                      <input type="checkbox" class="ms-checkbox" [checked]="isServiceSelected(s.id)" readonly>
+                      <span>{{ s.description }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="cf-field">
+            <label class="cf-label">Cliente <span class="cf-required">*</span></label>
+
+            <div
+              class="ms-trigger"
+              [class.ms-open]="clientDropdownOpen()"
+              [class.ms-error]="form.controls.clientId.invalid && form.controls.clientId.touched"
+              (click)="toggleClientDropdown(); $event.stopPropagation()">
+              <span class="ms-value" [class.ms-selected]="form.controls.clientId.value || form.controls.patientName.value">
+                {{ getClientLabel() }}
+              </span>
+              <ion-icon name="chevron-down-outline" class="ms-chevron" [class.rotated]="clientDropdownOpen()"></ion-icon>
+            </div>
+
+            @if (clientsService.getClients().length === 0) {
+              <p class="cf-error">No hay clientes registrados. Por favor, crea un cliente en el módulo de Clientes primero.</p>
+            } @else if (form.controls.clientId.invalid && form.controls.clientId.touched) {
+              <p class="cf-error">Selecciona un cliente</p>
+            }
+
+            @if (clientDropdownOpen()) {
+              <div class="ms-dropdown" (click)="$event.stopPropagation()">
+                <div class="ms-search-row">
+                  <div class="ms-search-box">
+                    <ion-icon name="search-outline" class="ms-search-icon"></ion-icon>
+                    <input
+                      class="ms-search-input"
+                      type="text"
+                      [value]="clientSearch()"
+                      (input)="clientSearch.set($any($event.target).value)"
+                      placeholder="Buscar cliente..."
+                      autocomplete="off">
+                  </div>
+                  <button type="button" class="ms-search-clear" (click)="clientSearch.set('')">
+                    <ion-icon name="close-outline"></ion-icon>
+                  </button>
+                </div>
+                <div class="ms-list">
+                  @if (filteredClients.length === 0) {
+                    <div class="ms-empty">No se encontraron clientes</div>
+                  }
+                  @for (c of filteredClients; track c.id) {
+                    <div class="ms-item" (click)="selectClient(c.id)">
+                      <ion-icon
+                        name="checkmark-outline"
+                        class="ms-check"
+                        [class.ms-check-visible]="form.controls.clientId.value === c.id">
+                      </ion-icon>
+                      <span>{{ c.nombres }} {{ c.apellidos }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="cf-field">
+            <label class="cf-label">Comentario</label>
+            <textarea
+              class="cf-textarea"
+              formControlName="comment"
+              placeholder="Agregar comentarios adicionales...">
+            </textarea>
+          </div>
+
+          <div style="height: 1rem;"></div>
+
+        </form>
+      </ion-content>
+
+      <ion-footer class="nc-footer">
+        <div class="nc-actions">
+          <button type="submit" form="citaForm" class="nc-btn-save">
+            <ion-icon name="save-outline"></ion-icon>
+            <strong>{{ editingId() ? 'Actualizar' : 'Guardar' }}</strong>
+          </button>
+          <button type="button" class="nc-btn-cancel" (click)="closeModal()">
+            <ion-icon name="close-outline"></ion-icon>
+            <strong>Cancelar</strong>
+          </button>
+        </div>
+      </ion-footer>
+
+    </ng-template>
+  </ion-modal>
+
+  <!-- ── OPCIONES DE CITA MODAL ─────────────────────────── -->
+  <ion-modal [isOpen]="optionsModalOpen()" (didDismiss)="onOptionsModalDismiss()">
+    <ng-template>
+      <div class="opt-modal-header">
+        <h2 class="opt-modal-title">{{ optionsModalTitle() }}</h2>
+        @if (selectedAppointment()?.profesionalNombre) {
+          <p class="opt-modal-subtitle">
+            Atendido por: {{ selectedAppointment()?.profesionalNombre }}
+          </p>
+        }
+      </div>
+
+      <ion-content class="opt-content">
+        <button type="button" class="opt-item" (click)="goToClientFile()">
+          <span class="opt-icon opt-icon-purple">
+            <ion-icon name="person-outline"></ion-icon>
+          </span>
+          <span class="opt-text">
+            <strong>Ficha de {{ selectedAppointment()?.clienteNombre }}</strong>
+            <span>Ver la ficha del cliente</span>
+          </span>
+          <ion-icon name="chevron-forward-outline" class="opt-chevron"></ion-icon>
+        </button>
+
+        <button type="button" class="opt-item" (click)="showAppointmentDetails()">
+          <span class="opt-icon opt-icon-blue">
+            <ion-icon name="document-text-outline"></ion-icon>
+          </span>
+          <span class="opt-text">
+            <strong>Detalles de la cita</strong>
+            <span>Información sobre esta cita</span>
+          </span>
+          <ion-icon name="chevron-forward-outline" class="opt-chevron"></ion-icon>
+        </button>
+
+        <button type="button" class="opt-item" (click)="completeAppointment()">
+          <span class="opt-icon opt-icon-purple">
+            <ion-icon name="checkmark-circle-outline"></ion-icon>
+          </span>
+          <span class="opt-text">
+            <strong>Completar</strong>
+            <span>Completar la cita como satisfactoria</span>
+          </span>
+          <ion-icon name="chevron-forward-outline" class="opt-chevron"></ion-icon>
+        </button>
+
+        <button type="button" class="opt-item" (click)="openEditFromOptions()">
+          <span class="opt-icon opt-icon-green">
+            <ion-icon name="create-outline"></ion-icon>
+          </span>
+          <span class="opt-text">
+            <strong>Editar</strong>
+            <span>Realizar ajustes a cita creada previamente</span>
+          </span>
+          <ion-icon name="chevron-forward-outline" class="opt-chevron"></ion-icon>
+        </button>
+
+        <button type="button" class="opt-item" (click)="cancelAppointment()">
+          <span class="opt-icon opt-icon-red">
+            <ion-icon name="close-circle-outline"></ion-icon>
+          </span>
+          <span class="opt-text">
+            <strong>Cancelar</strong>
+            <span>La cita será cancelada y será removida del calendario</span>
+          </span>
+          <ion-icon name="chevron-forward-outline" class="opt-chevron"></ion-icon>
+        </button>
+
+        <button type="button" class="opt-item" (click)="deleteFromOptions()">
+          <span class="opt-icon opt-icon-red">
+            <ion-icon name="trash-outline"></ion-icon>
+          </span>
+          <span class="opt-text">
+            <strong>Eliminar</strong>
+            <span>La cita será eliminada de los registros</span>
+          </span>
+          <ion-icon name="chevron-forward-outline" class="opt-chevron"></ion-icon>
+        </button>
+      </ion-content>
+
+      <ion-footer class="opt-footer">
+        <button type="button" class="opt-close-btn" (click)="closeOptionsModal()">
+          <ion-icon name="close-outline"></ion-icon>
+          <strong>Cerrar</strong>
+        </button>
+      </ion-footer>
+    </ng-template>
+  </ion-modal>
+
+  <app-client-file-modal
+    [isOpen]="clientFileOpen()"
+    [loading]="clientFileLoading()"
+    [detail]="clientFileDetail()"
+    (closed)="closeClientFile()"
+    (editRequested)="onClientFileEdit($event)"
+  />
+
+  <app-appointment-detail-modal
+    [isOpen]="appointmentDetailOpen()"
+    [appointment]="appointmentDetail()"
+    (closed)="closeAppointmentDetail()"
+  />
+
+  <app-complete-appointment-modal
+    [isOpen]="completeModalOpen()"
+    [loading]="completeLoading()"
+    [submitting]="completeSubmitting()"
+    [clientName]="completeClientName()"
+    [serviceName]="completeServiceName()"
+    [fields]="completeFields()"
+    (closed)="closeCompleteModal()"
+    (confirmed)="onCompleteConfirmed($event)"
+  />
+
+  <app-delete-appointment-modal
+    [isOpen]="deleteConfirmOpen()"
+    [clientName]="deleteConfirmClient()"
+    [deleting]="deleteConfirmLoading()"
+    (closed)="closeDeleteConfirm()"
+    (confirmed)="onDeleteConfirmed()"
+  />
+
+  <app-cancel-appointment-modal
+    [isOpen]="cancelConfirmOpen()"
+    [clientName]="cancelConfirmClient()"
+    [cancelling]="cancelConfirmLoading()"
+    (closed)="closeCancelConfirm()"
+    (confirmed)="onCancelConfirmed()"
+  />
+
+</ion-content>

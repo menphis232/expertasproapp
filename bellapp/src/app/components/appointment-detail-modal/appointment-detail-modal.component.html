@@ -1,0 +1,74 @@
+<ion-modal
+  class="ad-modal"
+  [isOpen]="isOpen()"
+  [backdropDismiss]="true"
+  (didDismiss)="onDismiss()">
+  <ng-template>
+    <div class="ad-shell">
+      <div class="ad-modal-header">
+        <h2>Detalles de la Cita</h2>
+      </div>
+
+      <div class="ad-body">
+        @if (appointment(); as apt) {
+          <div class="ad-row">
+            <ion-icon name="person-outline" class="ad-icon"></ion-icon>
+            <div class="ad-field">
+              <span class="ad-label">CLIENTE</span>
+              <span class="ad-value">{{ apt.clienteNombre }}</span>
+            </div>
+          </div>
+
+          <div class="ad-row">
+            <ion-icon name="sparkles-outline" class="ad-icon"></ion-icon>
+            <div class="ad-field">
+              <span class="ad-label">SERVICIO</span>
+              <span class="ad-value">{{ apt.servicio || '--' }}</span>
+            </div>
+          </div>
+
+          <div class="ad-row">
+            <ion-icon name="calendar-outline" class="ad-icon"></ion-icon>
+            <div class="ad-field">
+              <span class="ad-label">FECHA</span>
+              <span class="ad-value">{{ formatFecha(apt.fecha) }}</span>
+            </div>
+          </div>
+
+          <div class="ad-row">
+            <ion-icon name="time-outline" class="ad-icon"></ion-icon>
+            <div class="ad-field">
+              <span class="ad-label">HORA</span>
+              <span class="ad-value">{{ formatHora(apt.hora) }}</span>
+            </div>
+          </div>
+
+          <div class="ad-row">
+            <ion-icon name="person-circle-outline" class="ad-icon"></ion-icon>
+            <div class="ad-field">
+              <span class="ad-label">PROFESIONAL</span>
+              <span class="ad-value">{{ apt.profesionalNombre || '--' }}</span>
+            </div>
+          </div>
+
+          <div class="ad-row ad-row-last">
+            <ion-icon name="information-circle-outline" class="ad-icon"></ion-icon>
+            <div class="ad-field">
+              <span class="ad-label">ESTADO</span>
+              <span class="ad-badge" [attr.data-status]="statusClass(apt.estado)">
+                {{ statusLabel(apt.estado) }}
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="ad-footer">
+        <button type="button" class="ad-close-btn" (click)="close()">
+          <ion-icon name="close-outline" class="ad-close-icon"></ion-icon>
+          <span>Cerrar</span>
+        </button>
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>

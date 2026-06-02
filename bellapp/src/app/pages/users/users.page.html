@@ -1,0 +1,185 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button color="light"></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Usuarios</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="users-content">
+  <div class="action-buttons">
+    <ion-button expand="block" class="btn-create" (click)="openCreate()">
+      <ion-icon slot="start" name="person-add-outline"></ion-icon>
+      CREAR USUARIO
+    </ion-button>
+  </div>
+
+  <div class="list-card">
+    <div class="list-card-header">
+      <span class="list-title">Lista de Usuarios</span>
+      <span class="list-count">{{ list().length }} usuarios</span>
+    </div>
+
+    <hr class="card-divider" />
+
+    @if (list().length === 0) {
+      <div class="empty-state">
+        <ion-icon name="people-outline" class="empty-icon"></ion-icon>
+        <p class="empty-text">No hay usuarios registrados</p>
+        <ion-button fill="outline" size="small" class="btn-first" (click)="openCreate()">
+          CREAR PRIMER USUARIO
+        </ion-button>
+      </div>
+    } @else {
+      <ion-list lines="full" class="users-list">
+        @for (u of list(); track u.id) {
+          <ion-item>
+            <ion-label>
+              <h2>{{ u.nombreApellido }}</h2>
+              <p>{{ u.correo }}</p>
+              <p class="muted">{{ u.rol }}</p>
+            </ion-label>
+            <ion-button fill="clear" slot="end" (click)="openEdit(u)">
+              <ion-icon name="create-outline"></ion-icon>
+            </ion-button>
+            <ion-button fill="clear" color="danger" slot="end" (click)="confirmDelete(u)">
+              <ion-icon name="trash-outline"></ion-icon>
+            </ion-button>
+          </ion-item>
+        }
+      </ion-list>
+    }
+  </div>
+</ion-content>
+
+<!-- ── CREATE / EDIT MODAL ──────────────────────────────── -->
+<ion-modal
+  [isOpen]="modalOpen()"
+  (didDismiss)="closeModal()"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1">
+  <ng-template>
+
+    <div class="pf-modal-header">Usuario</div>
+
+    <ion-content class="pf-content" (click)="roleDropdownOpen() && closeRoleDropdown()">
+      <form [formGroup]="form" (ngSubmit)="save()" id="userForm" (click)="$event.stopPropagation()">
+
+        <!-- Nombre y apellido -->
+        <div class="cf-field">
+          <label class="cf-label">Nombre y apellido <span class="cf-required">*</span></label>
+          <input class="cf-input" formControlName="nombreApellido" placeholder="Ingrese nombre y apellido" type="text" autocomplete="off">
+        </div>
+
+        <!-- Correo -->
+        <div class="cf-field">
+          <label class="cf-label">Correo <span class="cf-required">*</span></label>
+          <input class="cf-input" formControlName="correo" placeholder="Ingrese correo electrónico" type="email" autocomplete="off">
+        </div>
+
+        <!-- Contraseña -->
+        <div class="cf-field">
+          <label class="cf-label">
+            {{ editingId() ? 'Nueva contraseña (opcional)' : 'Contraseña' }}
+            @if (!editingId()) { <span class="cf-required">*</span> }
+          </label>
+          <div class="cf-password-wrapper">
+            <input
+              class="cf-input cf-password-input"
+              formControlName="password"
+              placeholder="Ingrese contraseña"
+              [type]="showPassword() ? 'text' : 'password'"
+              autocomplete="new-password">
+            <button type="button" class="cf-eye-btn" (click)="togglePassword()">
+              <ion-icon [name]="showPassword() ? 'eye-outline' : 'eye-off-outline'"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Confirmar contraseña -->
+        <div class="cf-field">
+          <label class="cf-label">
+            Confirmar contraseña
+            @if (!editingId()) { <span class="cf-required">*</span> }
+          </label>
+          <div class="cf-password-wrapper">
+            <input
+              class="cf-input cf-password-input"
+              formControlName="confirmarPassword"
+              placeholder="Confirme la contraseña"
+              [type]="showConfirmPassword() ? 'text' : 'password'"
+              autocomplete="new-password">
+            <button type="button" class="cf-eye-btn" (click)="toggleConfirmPassword()">
+              <ion-icon [name]="showConfirmPassword() ? 'eye-outline' : 'eye-off-outline'"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Rol single-select with search -->
+        <div class="cf-field">
+          <label class="cf-label">Rol <span class="cf-required">*</span></label>
+
+          <div
+            class="ms-trigger"
+            [class.ms-open]="roleDropdownOpen()"
+            (click)="toggleRoleDropdown(); $event.stopPropagation()">
+            <span class="ms-value" [class.ms-selected]="form.controls.rol.value">{{ getRoleLabel() }}</span>
+            <ion-icon name="chevron-down-outline" class="ms-chevron" [class.rotated]="roleDropdownOpen()"></ion-icon>
+          </div>
+
+          @if (roleDropdownOpen()) {
+            <div class="ms-dropdown" (click)="$event.stopPropagation()">
+              <div class="ms-search-row">
+                <div class="ms-search-box">
+                  <ion-icon name="search-outline" class="ms-search-icon"></ion-icon>
+                  <input
+                    class="ms-search-input"
+                    type="text"
+                    [value]="roleSearch()"
+                    (input)="roleSearch.set($any($event.target).value)"
+                    placeholder=""
+                    autocomplete="off">
+                </div>
+                <button type="button" class="ms-search-clear" (click)="roleSearch.set('')">
+                  <ion-icon name="close-outline"></ion-icon>
+                </button>
+              </div>
+
+              <div class="ms-list">
+                @if (filteredRoles.length === 0) {
+                  <div class="ms-empty">No results found</div>
+                }
+                @for (r of filteredRoles; track r.id) {
+                  <div class="ms-item" [class.ms-item-selected]="isRoleSelected(r)" (click)="selectRole(r)">
+                    <span>{{ r.name }}</span>
+                    @if (isRoleSelected(r)) {
+                      <ion-icon name="checkmark-outline" class="ms-check"></ion-icon>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <div style="height: 1rem;"></div>
+
+      </form>
+    </ion-content>
+
+    <ion-footer class="pf-footer">
+      <div class="pf-actions">
+        <button type="submit" form="userForm" class="pf-btn-save">
+          <ion-icon name="add-outline"></ion-icon>
+          <strong>Guardar</strong>
+        </button>
+        <button type="button" class="pf-btn-cancel" (click)="closeModal()">
+          <ion-icon name="close-outline"></ion-icon>
+          <strong>Cancelar</strong>
+        </button>
+      </div>
+    </ion-footer>
+
+  </ng-template>
+</ion-modal>

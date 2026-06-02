@@ -1,0 +1,117 @@
+<ion-content class="login-content" [fullscreen]="true">
+
+  <!-- ── Login Form (centered card) ── -->
+  @if (!showTenantSelector()) {
+    <div class="login-screen">
+      <div class="login-card">
+        <header class="brand">
+          <ion-icon name="calendar-outline" class="brand-icon" aria-hidden="true"></ion-icon>
+          <h1>EXPERTAS PRO</h1>
+          <p class="tagline">Gestiona tus citas de forma sencilla</p>
+        </header>
+
+        <form class="login-form" [formGroup]="form" (ngSubmit)="submit()">
+          <div class="field-group">
+            <label class="field-label" for="login-email">
+              <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+              Correo electrónico
+            </label>
+            <input
+              id="login-email"
+              class="field-input"
+              type="email"
+              formControlName="email"
+              placeholder="tu@email.com"
+              autocomplete="email"
+              inputmode="email">
+            @if (form.controls.email.touched && form.controls.email.invalid) {
+              <span class="field-error">Correo inválido</span>
+            }
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="login-password">
+              <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
+              Contraseña
+            </label>
+            <div class="password-wrap">
+              <input
+                id="login-password"
+                class="field-input"
+                [type]="showPassword() ? 'text' : 'password'"
+                formControlName="password"
+                placeholder="••••••••"
+                autocomplete="current-password">
+              <button
+                type="button"
+                class="toggle-password"
+                (click)="togglePassword()"
+                [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              >
+                <ion-icon [name]="showPassword() ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+              </button>
+            </div>
+            @if (form.controls.password.touched && form.controls.password.invalid) {
+              <span class="field-error">Mínimo 6 caracteres</span>
+            }
+          </div>
+
+          <ion-button expand="block" type="submit" [disabled]="loading()" class="submit-btn">
+            @if (loading()) {
+              <ion-spinner name="crescent" color="light"></ion-spinner>
+              <span style="margin-left: 0.5rem;">Verificando</span>
+            } @else {
+              Iniciar Sesión
+            }
+          </ion-button>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- ── Tenant Selector (full-screen) ── -->
+  @if (showTenantSelector()) {
+    <div class="tenant-screen">
+
+      <div class="tenant-header">
+        <div class="tenant-header-icon-wrap">
+          <ion-icon name="business-outline" class="tenant-header-icon"></ion-icon>
+        </div>
+        <h1 class="tenant-header-title">Selecciona tu negocio</h1>
+        <p class="tenant-header-subtitle">
+          Tu cuenta tiene acceso a múltiples espacios de trabajo
+        </p>
+      </div>
+
+      <div class="tenant-body">
+        <div class="tenant-list">
+          @for (tenant of tenantOptions(); track tenant.id) {
+            <button
+              class="tenant-item"
+              [disabled]="loading()"
+              (click)="pickTenant(tenant)"
+            >
+              <span class="tenant-avatar">{{ tenant.id[0].toUpperCase() }}</span>
+              <span class="tenant-info">
+                <span class="tenant-name">{{ capitalizeTenant(tenant.id) }}</span>
+                <span class="tenant-domain">{{ tenant.domain }}</span>
+              </span>
+              @if (loading()) {
+                <ion-spinner name="crescent" class="tenant-chevron-spinner"></ion-spinner>
+              } @else {
+                <ion-icon name="chevron-forward-outline" class="tenant-chevron"></ion-icon>
+              }
+            </button>
+          }
+        </div>
+
+        <button class="back-to-login-btn" (click)="backToLogin()" [disabled]="loading()">
+          <ion-icon name="arrow-back-outline"></ion-icon>
+          Volver al login
+        </button>
+      </div>
+
+    </div>
+  }
+
+</ion-content>

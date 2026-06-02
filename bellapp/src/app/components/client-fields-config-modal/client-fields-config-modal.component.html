@@ -1,0 +1,154 @@
+<ion-modal
+  [isOpen]="isOpen()"
+  (didPresent)="onModalPresent()"
+  (didDismiss)="dismiss()"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1">
+  <ng-template>
+    <div class="fc-header">Configuración de campos</div>
+
+    <ion-content class="fc-content">
+      @if (loading()) {
+        <div class="fc-loading">
+          <ion-spinner name="crescent" color="primary"></ion-spinner>
+          <p>Cargando configuración…</p>
+        </div>
+      } @else {
+        <form [formGroup]="form" (ngSubmit)="save()" id="fieldsConfigForm">
+          <div class="fc-table-card">
+            <div class="fc-table-scroll">
+              <div class="fc-table">
+                <div class="fc-table-head">
+                  <span class="fc-col fc-col-drag"></span>
+                  <span class="fc-col fc-col-desc">DESCRIPCIÓN</span>
+                  <span class="fc-col fc-col-type">TIPO DE DATO</span>
+                  <span class="fc-col fc-col-req">REQ.</span>
+                  <span class="fc-col fc-col-role">ROL</span>
+                  <span class="fc-col fc-col-column">N° COLUMNA</span>
+                  <span class="fc-col fc-col-actions"></span>
+                </div>
+
+                <div formArrayName="fields">
+                  <ion-reorder-group [disabled]="saving()" (ionReorderEnd)="onReorderEnd($event)">
+                    @for (field of fieldsArray.controls; let i = $index; track trackField(i)) {
+                      <div
+                        class="fc-row"
+                        [class.fc-row-alt]="i % 2 === 1"
+                        [formGroupName]="i">
+                        <div class="fc-col fc-col-drag">
+                          <ion-reorder>
+                            <ion-icon name="reorder-three-outline" class="fc-drag-icon"></ion-icon>
+                          </ion-reorder>
+                        </div>
+
+                        <div class="fc-col fc-col-desc">
+                          <input
+                            class="fc-input"
+                            formControlName="descripcion"
+                            placeholder="Descripción"
+                            type="text"
+                            autocomplete="off">
+                        </div>
+
+                        <div class="fc-col fc-col-type">
+                          <div class="fc-select-wrap">
+                            <select class="fc-select" formControlName="tipo_dato_id">
+                              @for (tipo of tipoDatos; track tipo.id) {
+                                <option [value]="tipo.id">{{ tipo.descripcion }}</option>
+                              }
+                            </select>
+                            <ion-icon name="chevron-down-outline" class="fc-chevron"></ion-icon>
+                          </div>
+                        </div>
+
+                        <div class="fc-col fc-col-req">
+                          <label class="fc-checkbox-wrap">
+                            <input type="checkbox" class="fc-checkbox" formControlName="requerido">
+                          </label>
+                        </div>
+
+                        <div class="fc-col fc-col-role">
+                          <div class="fc-select-wrap">
+                            <select class="fc-select" formControlName="roleKey">
+                              @for (role of roleOptions; track role.value) {
+                                <option [value]="role.value">{{ role.label }}</option>
+                              }
+                            </select>
+                            <ion-icon name="chevron-down-outline" class="fc-chevron"></ion-icon>
+                          </div>
+                        </div>
+
+                        <div class="fc-col fc-col-column">
+                          <div class="fc-select-wrap">
+                            <select class="fc-select" formControlName="show_column">
+                              @for (col of columnOptions; track col.value) {
+                                <option [value]="col.value">{{ col.label }}</option>
+                              }
+                            </select>
+                            <ion-icon name="chevron-down-outline" class="fc-chevron"></ion-icon>
+                          </div>
+                        </div>
+
+                        <div class="fc-col fc-col-actions">
+                          <button
+                            type="button"
+                            class="fc-delete-btn"
+                            [disabled]="saving()"
+                            (click)="removeField(i)"
+                            aria-label="Eliminar campo">
+                            <ion-icon name="trash-outline"></ion-icon>
+                          </button>
+                        </div>
+
+                        @if (showOptionsFor(i)) {
+                          <div class="fc-options-row">
+                            <label class="fc-options-label">Opciones (una por línea)</label>
+                            <textarea
+                              class="fc-textarea"
+                              formControlName="optionsText"
+                              rows="3"
+                              placeholder="Opción 1&#10;Opción 2"></textarea>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </ion-reorder-group>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="fc-add-btn" [disabled]="saving()" (click)="addField()">
+            <ion-icon name="add-outline"></ion-icon>
+            Agregar campo
+          </button>
+
+          @if (fieldCount() === 0) {
+            <p class="fc-empty-hint">No hay campos configurados. Use "Agregar campo" para crear uno.</p>
+          }
+        </form>
+      }
+    </ion-content>
+
+    <ion-footer class="fc-footer">
+      <div class="fc-actions">
+        <button type="button" class="fc-btn-cancel" [disabled]="saving()" (click)="dismiss()">
+          <ion-icon name="close-outline"></ion-icon>
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          form="fieldsConfigForm"
+          class="fc-btn-save"
+          [disabled]="loading() || saving()">
+          @if (saving()) {
+            <ion-spinner name="crescent"></ion-spinner>
+          } @else {
+            <ion-icon name="checkmark-outline"></ion-icon>
+          }
+          <strong>Guardar</strong>
+        </button>
+      </div>
+    </ion-footer>
+  </ng-template>
+</ion-modal>

@@ -1,0 +1,52 @@
+<ion-modal
+  class="can-modal"
+  [isOpen]="isOpen()"
+  [backdropDismiss]="!cancelling()"
+  (didDismiss)="onDismiss()">
+  <ng-template>
+    <div class="can-shell">
+      <header class="can-topbar">
+        <h2>Cancelar cita</h2>
+        <button
+          type="button"
+          class="can-close-btn"
+          (click)="close()"
+          [disabled]="cancelling()"
+          aria-label="Cerrar">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </header>
+
+      <div class="can-body">
+        <span class="can-icon">
+          <ion-icon name="close-circle-outline"></ion-icon>
+        </span>
+        <p class="can-message">¿Está seguro que desea cancelar esta cita?</p>
+        @if (clientName()) {
+          <p class="can-client">{{ clientName() }}</p>
+        }
+      </div>
+
+      <footer class="can-footer">
+        <button
+          type="button"
+          class="can-btn-back"
+          (click)="close()"
+          [disabled]="cancelling()">
+          No, volver
+        </button>
+        <button
+          type="button"
+          class="can-btn-confirm"
+          (click)="confirm()"
+          [disabled]="cancelling()">
+          @if (cancelling()) {
+            <ion-spinner name="crescent"></ion-spinner>
+          } @else {
+            Cancelar cita
+          }
+        </button>
+      </footer>
+    </div>
+  </ng-template>
+</ion-modal>

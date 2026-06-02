@@ -1,0 +1,204 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button color="light"></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Clientes</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="clients-content">
+  <div class="action-buttons">
+    <ion-button expand="block" class="btn-create" (click)="openCreate()">
+      <ion-icon slot="start" name="person-add-outline"></ion-icon>
+      CREAR CLIENTE
+    </ion-button>
+    <ion-button expand="block" fill="outline" class="btn-config" (click)="openConfig()">
+      <ion-icon slot="start" name="settings-outline"></ion-icon>
+      CONFIGURACIÓN
+    </ion-button>
+  </div>
+
+  <div class="list-card">
+    <div class="list-card-header">
+      <div class="list-title-group">
+        <span class="list-title">Lista de Clientes</span>
+        <span class="list-count">{{ filtered().length }} clientes</span>
+      </div>
+      <ion-button fill="outline" size="small" class="sort-btn" (click)="toggleSort()">
+        <ion-icon slot="start" [name]="sortDesc() ? 'arrow-down-outline' : 'arrow-up-outline'"></ion-icon>
+        {{ sortDesc() ? 'DESCENDENTE' : 'ASCENDENTE' }}
+      </ion-button>
+    </div>
+
+    <hr class="card-divider" />
+
+    @if (filtered().length === 0) {
+      <div class="empty-state">
+        <ion-icon name="people-outline" class="empty-icon"></ion-icon>
+        <p class="empty-text">No hay clientes registrados</p>
+        <ion-button fill="outline" size="small" class="btn-first" (click)="openCreate()">
+          CREAR PRIMER CLIENTE
+        </ion-button>
+      </div>
+    } @else {
+      <ion-list lines="full" class="clients-list">
+        @for (c of filtered(); track c.id) {
+          <ion-item>
+            <ion-label>
+              <h2>{{ c.nombres }} {{ c.apellidos }}</h2>
+              @if (c.rut) {
+                <p>RUT: {{ c.rut }}</p>
+              }
+              <p class="muted">Actualizado {{ c.updatedAt | date: 'short' }}</p>
+            </ion-label>
+            <ion-button fill="clear" slot="end" (click)="openEdit(c)">
+              <ion-icon name="create-outline"></ion-icon>
+            </ion-button>
+            <ion-button fill="clear" color="danger" slot="end" (click)="confirmDelete(c)">
+              <ion-icon name="trash-outline"></ion-icon>
+            </ion-button>
+          </ion-item>
+        }
+      </ion-list>
+    }
+  </div>
+</ion-content>
+
+<!-- ── CREATE / EDIT MODAL ──────────────────────────────── -->
+<ion-modal [isOpen]="modalOpen()" (didDismiss)="closeModal()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-title>Cliente</ion-title>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="cf-content">
+      <form [formGroup]="form" (ngSubmit)="save()" id="clientForm">
+
+        <!-- Nombres -->
+        <div class="cf-field">
+          <label class="cf-label">Nombres <span class="cf-required">*</span></label>
+          <input class="cf-input" formControlName="nombres" placeholder="Ingrese nombres" type="text" autocomplete="off">
+        </div>
+
+        <!-- Apellidos -->
+        <div class="cf-field">
+          <label class="cf-label">Apellidos <span class="cf-required">*</span></label>
+          <input class="cf-input" formControlName="apellidos" placeholder="Ingrese apellidos" type="text" autocomplete="off">
+        </div>
+
+        <!-- Fecha de Nacimiento -->
+        <div class="cf-field">
+          <label class="cf-label">Fecha de Nacimiento</label>
+          <div class="cf-date-wrapper">
+            <input class="cf-input cf-date-input" formControlName="fechaNacimiento" type="date" #dateInput>
+            <button type="button" class="cf-calendar-btn" (click)="dateInput.click()">
+              <ion-icon name="calendar-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- RUT -->
+        <div class="cf-field">
+          <label class="cf-label">RUT</label>
+          <input class="cf-input" formControlName="rut" placeholder="Ingrese RUT" type="text" autocomplete="off">
+        </div>
+
+        <!-- Referido por -->
+        <div class="cf-field">
+          <label class="cf-label">Referido por</label>
+          <div class="cf-select-wrapper">
+            <select class="cf-select" formControlName="referidoPor">
+              <option value="">seleccionar</option>
+              @for (c of otherClients; track c.id) {
+                <option [value]="c.nombres + ' ' + c.apellidos">{{ c.nombres }} {{ c.apellidos }}</option>
+              }
+            </select>
+            <ion-icon name="chevron-down-outline" class="cf-chevron"></ion-icon>
+          </div>
+        </div>
+
+        <!-- Credenciales -->
+        <div class="cf-field">
+          <label class="cf-label">Credenciales</label>
+          <div class="cf-select-wrapper">
+            <select class="cf-select" formControlName="credenciales">
+              <option value="no_crear">No crear usuario</option>
+              <option value="crear">Crear usuario</option>
+            </select>
+            <ion-icon name="chevron-down-outline" class="cf-chevron"></ion-icon>
+          </div>
+        </div>
+
+        <!-- ── Enfermedades ── -->
+        <div class="cf-section-label">Enfermedades</div>
+
+        <div formArrayName="enfermedades">
+          @for (item of enfermedadesArray.controls; track $index) {
+            <div class="cf-item-card" [formGroupName]="$index">
+              <div class="cf-item-header">
+                <label class="cf-label">Descripción <span class="cf-required">*</span></label>
+                <button type="button" class="cf-delete-btn" (click)="removeEnfermedad($index)">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
+              <textarea class="cf-textarea" formControlName="descripcion" placeholder="Descripción de la enfermedad" rows="2"></textarea>
+              <label class="cf-label cf-label-sm">Comentario</label>
+              <textarea class="cf-textarea" formControlName="comentario" placeholder="Comentarios adicionales" rows="2"></textarea>
+            </div>
+          }
+        </div>
+
+        <button type="button" class="cf-add-btn" (click)="addEnfermedad()">
+          <ion-icon name="add-outline"></ion-icon> Agregar
+        </button>
+
+        <!-- ── Medicamentos ── -->
+        <div class="cf-section-label">Medicamentos</div>
+
+        <div formArrayName="medicamentos">
+          @for (item of medicamentosArray.controls; track $index) {
+            <div class="cf-item-card" [formGroupName]="$index">
+              <div class="cf-item-header">
+                <label class="cf-label">Descripción <span class="cf-required">*</span></label>
+                <button type="button" class="cf-delete-btn" (click)="removeMedicamento($index)">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
+              <textarea class="cf-textarea" formControlName="descripcion" placeholder="Descripción del medicamento" rows="2"></textarea>
+              <label class="cf-label cf-label-sm">Comentario</label>
+              <textarea class="cf-textarea" formControlName="comentario" placeholder="Comentarios adicionales" rows="2"></textarea>
+            </div>
+          }
+        </div>
+
+        <button type="button" class="cf-add-btn" (click)="addMedicamento()">
+          <ion-icon name="add-outline"></ion-icon> Agregar
+        </button>
+
+        <!-- spacer so content clears the sticky footer -->
+        <div style="height: 1rem;"></div>
+
+      </form>
+    </ion-content>
+
+    <ion-footer class="cf-footer">
+      <div class="cf-actions">
+        <button type="button" class="cf-btn-cancel" (click)="closeModal()">
+          <ion-icon name="close-outline"></ion-icon> Cancelar
+        </button>
+        <button type="submit" form="clientForm" class="cf-btn-save">
+          <ion-icon name="checkmark-outline"></ion-icon> <strong>Guardar</strong>
+        </button>
+      </div>
+    </ion-footer>
+  </ng-template>
+</ion-modal>
+
+<app-client-fields-config-modal
+  [isOpen]="configModalOpen()"
+  (closed)="closeConfigModal()"
+  (saved)="closeConfigModal()">
+</app-client-fields-config-modal>

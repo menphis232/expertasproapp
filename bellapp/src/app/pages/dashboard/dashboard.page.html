@@ -1,0 +1,88 @@
+<ion-header class="agenda-header">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button color="light"></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Agenda</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="agenda-content">
+  <app-agenda-tabs active="dashboard"></app-agenda-tabs>
+
+  <div class="dashboard-body">
+    <div class="stats-grid">
+      <article class="stat-card stat-pending">
+        <div class="stat-accent"></div>
+        <div class="stat-icon-wrap">
+          <ion-icon name="arrow-up-outline"></ion-icon>
+        </div>
+        <p class="stat-value">{{ stats().pending }}</p>
+        <h3 class="stat-title">Pendientes</h3>
+        <p class="stat-desc">Citas pendientes del mes</p>
+      </article>
+
+      <article class="stat-card stat-completed">
+        <div class="stat-accent"></div>
+        <div class="stat-icon-wrap">
+          <ion-icon name="checkmark-circle-outline"></ion-icon>
+        </div>
+        <p class="stat-value">{{ stats().completed }}</p>
+        <h3 class="stat-title">Realizadas</h3>
+        <p class="stat-desc">Citas realizadas del mes</p>
+      </article>
+
+      <article class="stat-card stat-cancelled">
+        <div class="stat-accent"></div>
+        <div class="stat-icon-wrap">
+          <ion-icon name="close-circle-outline"></ion-icon>
+        </div>
+        <p class="stat-value">{{ stats().cancelled }}</p>
+        <h3 class="stat-title">Canceladas</h3>
+        <p class="stat-desc">Citas canceladas del mes</p>
+      </article>
+
+      <article class="stat-card stat-total">
+        <div class="stat-accent"></div>
+        <div class="stat-icon-wrap">
+          <ion-icon name="pie-chart-outline"></ion-icon>
+        </div>
+        <p class="stat-value">{{ stats().total }}</p>
+        <h3 class="stat-title">Total</h3>
+        <p class="stat-desc">Total de citas del mes</p>
+      </article>
+    </div>
+
+    <ion-button expand="block" class="add-appointment-btn" (click)="openAddAppointment()">
+      + AÑADIR CITA
+    </ion-button>
+
+    <section class="month-section">
+      <h2 class="month-title">{{ monthTitle() }}</h2>
+      <p class="month-subtitle">Resumen de actividades</p>
+
+      @if (monthAppointments().length === 0) {
+        <p class="month-empty">No hay actividades registradas este mes.</p>
+      } @else {
+        <div class="activity-scroll" (scroll)="onActivityScroll($event)">
+          <ul class="activity-list">
+            @for (apt of visibleAppointments(); track trackById($index, apt)) {
+              <li class="activity-item">
+                <div>
+                  <strong>{{ apt.clienteNombre }}</strong>
+                  <span>{{ apt.servicio }} · {{ apt.hora }}</span>
+                </div>
+                <span class="activity-badge" [attr.data-status]="apt.estado">
+                  {{ statusLabel(apt.estado) }}
+                </span>
+              </li>
+            }
+          </ul>
+          @if (hasMoreActivities()) {
+            <p class="activity-load-hint">Desplaza para ver más</p>
+          }
+        </div>
+      }
+    </section>
+  </div>
+</ion-content>

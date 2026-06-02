@@ -1,0 +1,85 @@
+<ion-modal [isOpen]="isOpen()" (didDismiss)="onDismiss()">
+  <ng-template>
+    <div class="ca-shell">
+      <header class="ca-topbar">
+        <h2>Detalles de Cita</h2>
+        <button type="button" class="ca-close-btn" (click)="close()" aria-label="Cerrar">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </header>
+
+      <div class="ca-hero">
+        <span class="ca-hero-icon">
+          <ion-icon name="checkmark-circle-outline"></ion-icon>
+        </span>
+        <div class="ca-hero-text">
+          <h3>Completar Cita</h3>
+          <p>
+            Por favor, registra los detalles de la sesión para
+            <strong>{{ clientName() }}</strong>
+          </p>
+        </div>
+      </div>
+
+      <ion-content class="ca-content">
+        @if (loading()) {
+          <div class="ca-loading">
+            <ion-spinner name="crescent"></ion-spinner>
+          </div>
+        } @else if (fields().length === 0) {
+          <p class="ca-empty">No hay campos configurados para este servicio.</p>
+        } @else {
+          <div class="ca-fields">
+            @for (field of fields(); track field.configServicioId) {
+              <article class="ca-card">
+                <span class="ca-badge">{{ serviceName() | uppercase }}</span>
+                <h4 class="ca-field-title">
+                  {{ field.description }}
+                  @if (field.required) {
+                    <span class="ca-required">*</span>
+                  }
+                </h4>
+
+                <input
+                  type="text"
+                  class="ca-input"
+                  [class.ca-input-error]="hasError(field.configServicioId)"
+                  placeholder="Ingresa el resultado"
+                  [value]="field.valor"
+                  (input)="updateValor(field.configServicioId, $any($event.target).value)">
+
+                <div class="ca-comment-wrap">
+                  <ion-icon name="chatbubble-outline" class="ca-comment-icon"></ion-icon>
+                  <textarea
+                    class="ca-textarea"
+                    placeholder="Comentarios adicionales o notas de este..."
+                    rows="2"
+                    [value]="field.comentario"
+                    (input)="updateComentario(field.configServicioId, $any($event.target).value)">
+                  </textarea>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </ion-content>
+
+      <ion-footer class="ca-footer">
+        <button type="button" class="ca-btn-back" (click)="close()" [disabled]="submitting()">
+          Regresar
+        </button>
+        <button
+          type="button"
+          class="ca-btn-confirm"
+          (click)="confirm()"
+          [disabled]="loading() || submitting() || fields().length === 0">
+          @if (submitting()) {
+            <ion-spinner name="crescent"></ion-spinner>
+          } @else {
+            Confirmar
+          }
+        </button>
+      </ion-footer>
+    </div>
+  </ng-template>
+</ion-modal>

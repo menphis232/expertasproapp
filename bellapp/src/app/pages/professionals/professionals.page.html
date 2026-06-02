@@ -1,0 +1,182 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button color="light"></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Profesionales</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="prof-content">
+  <div class="action-buttons">
+    <ion-button expand="block" class="btn-create" (click)="openCreate()">
+      <ion-icon slot="start" name="person-add-outline"></ion-icon>
+      CREAR PROFESIONAL
+    </ion-button>
+  </div>
+
+  <div class="list-card">
+    <div class="list-card-header">
+      <div class="list-title-group">
+        <span class="list-title">Lista de Profesionales</span>
+        <span class="list-count">{{ list().length }} profesionales</span>
+      </div>
+      <ion-button fill="outline" size="small" class="sort-btn" (click)="toggleSort()">
+        <ion-icon slot="start" [name]="sortDesc() ? 'arrow-down-outline' : 'arrow-up-outline'"></ion-icon>
+        {{ sortDesc() ? 'DESCENDENTE' : 'ASCENDENTE' }}
+      </ion-button>
+    </div>
+
+    <hr class="card-divider" />
+
+    @if (list().length === 0) {
+      <div class="empty-state">
+        <ion-icon name="people-outline" class="empty-icon"></ion-icon>
+        <p class="empty-text">No hay profesionales registrados</p>
+        <ion-button fill="outline" size="small" class="btn-first" (click)="openCreate()">
+          CREAR PRIMER PROFESIONAL
+        </ion-button>
+      </div>
+    } @else {
+      <ion-list lines="full" class="prof-list">
+        @for (p of list(); track p.id) {
+          <ion-item>
+            <ion-label>
+              <h2>{{ p.nombreApellido }}</h2>
+              <p>RUT: {{ p.rut }}</p>
+              @if (p.servicios.length) {
+                <p class="muted">{{ p.servicios.join(', ') }}</p>
+              }
+            </ion-label>
+            <ion-button fill="clear" slot="end" (click)="openEdit(p)">
+              <ion-icon name="create-outline"></ion-icon>
+            </ion-button>
+            <ion-button fill="clear" color="danger" slot="end" (click)="confirmDelete(p)">
+              <ion-icon name="trash-outline"></ion-icon>
+            </ion-button>
+          </ion-item>
+        }
+      </ion-list>
+    }
+  </div>
+</ion-content>
+
+<!-- ── CREATE / EDIT MODAL (bottom sheet) ──────────────── -->
+<ion-modal
+  [isOpen]="modalOpen()"
+  (didDismiss)="closeModal()"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1">
+  <ng-template>
+
+    <div class="pf-modal-header">Profesional</div>
+
+    <ion-content class="pf-content" (click)="serviceDropdownOpen() && closeServiceDropdown()">
+      <form [formGroup]="form" (ngSubmit)="save()" id="profForm" (click)="$event.stopPropagation()">
+
+        <!-- Nombre y Apellido -->
+        <div class="cf-field">
+          <label class="cf-label">Nombre y Apellido <span class="cf-required">*</span></label>
+          <input class="cf-input" formControlName="nombreApellido" placeholder="Ingrese nombre y apellido" type="text" autocomplete="off">
+        </div>
+
+        <!-- RUT -->
+        <div class="cf-field">
+          <label class="cf-label">RUT <span class="cf-required">*</span></label>
+          <input class="cf-input" formControlName="rut" placeholder="Ingrese RUT" type="text" autocomplete="off">
+        </div>
+
+        <!-- Servicios multi-select -->
+        <div class="cf-field">
+          <label class="cf-label">Servicios <span class="cf-required">*</span></label>
+
+          <div
+            class="ms-trigger"
+            [class.ms-open]="serviceDropdownOpen()"
+            (click)="toggleServiceDropdown(); $event.stopPropagation()">
+            <span class="ms-value">{{ getServicesLabel() }}</span>
+            <ion-icon name="chevron-down-outline" class="ms-chevron" [class.rotated]="serviceDropdownOpen()"></ion-icon>
+          </div>
+
+          @if (serviceDropdownOpen()) {
+            <div class="ms-dropdown" (click)="$event.stopPropagation()">
+              <div class="ms-search-row">
+                <div class="ms-search-box">
+                  <ion-icon name="search-outline" class="ms-search-icon"></ion-icon>
+                  <input
+                    class="ms-search-input"
+                    type="text"
+                    [value]="serviceSearch()"
+                    (input)="serviceSearch.set($any($event.target).value)"
+                    placeholder=""
+                    autocomplete="off">
+                </div>
+                <button type="button" class="ms-search-clear" (click)="serviceSearch.set('')">
+                  <ion-icon name="close-outline"></ion-icon>
+                </button>
+              </div>
+
+              <div class="ms-list">
+                @if (filteredServices.length === 0) {
+                  <div class="ms-empty">No results found</div>
+                }
+                @for (s of filteredServices; track s.id) {
+                  <div class="ms-item" (click)="toggleService(s.id)">
+                    <input type="checkbox" class="ms-checkbox" [checked]="isServiceSelected(s.id)" readonly>
+                    <span>{{ s.description }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Credenciales -->
+        <div class="cf-field">
+          <label class="cf-label">Credenciales de usuario</label>
+          <div class="cf-select-wrapper">
+            <select class="cf-select" formControlName="credenciales" (change)="onCredencialesChange()">
+              <option value="no_crear">No crear usuario</option>
+              <option value="crear">Crear usuario</option>
+            </select>
+            <ion-icon name="chevron-down-outline" class="cf-chevron"></ion-icon>
+          </div>
+        </div>
+
+        @if (showUserCredentials) {
+          <div class="cf-field">
+            <label class="cf-label">Correo <span class="cf-required">*</span></label>
+            <input class="cf-input" formControlName="email" placeholder="correo@ejemplo.com" type="email" autocomplete="off">
+          </div>
+
+          <div class="cf-field">
+            <label class="cf-label">Contraseña <span class="cf-required">*</span></label>
+            <input class="cf-input" formControlName="password" placeholder="Mínimo 6 caracteres" type="password" autocomplete="new-password">
+          </div>
+
+          <div class="cf-field">
+            <label class="cf-label">Confirmar contraseña <span class="cf-required">*</span></label>
+            <input class="cf-input" formControlName="passwordConfirm" placeholder="Repita la contraseña" type="password" autocomplete="new-password">
+          </div>
+        }
+
+        <div style="height: 1rem;"></div>
+
+      </form>
+    </ion-content>
+
+    <ion-footer class="pf-footer">
+      <div class="pf-actions">
+        <button type="submit" form="profForm" class="pf-btn-save">
+          <ion-icon name="add-outline"></ion-icon>
+          <strong>Guardar</strong>
+        </button>
+        <button type="button" class="pf-btn-cancel" (click)="closeModal()">
+          <ion-icon name="close-outline"></ion-icon>
+          <strong>Cancelar</strong>
+        </button>
+      </div>
+    </ion-footer>
+
+  </ng-template>
+</ion-modal>

@@ -1,0 +1,77 @@
+@if (showMenu) {
+  <ion-menu contentId="main-content" type="overlay">
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-title>Menú</ion-title>
+        <ion-buttons slot="end">
+          <ion-menu-toggle>
+            <ion-button fill="clear" color="light">
+              <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+            </ion-button>
+          </ion-menu-toggle>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="menu-content">
+
+      <!-- User block -->
+      <div class="user-block">
+        <p class="user-name">{{ userName() }}</p>
+        <span class="tenant-badge">{{ tenantSlug() | uppercase }}</span>
+      </div>
+
+      <!-- Tenant switcher (only when multiple tenants) -->
+      @if (hasMultipleTenants()) {
+        <div class="section-label">CAMBIAR NEGOCIO</div>
+        <div class="tenant-switcher">
+          @for (tenant of availableTenants(); track tenant.id) {
+            <button
+              class="tenant-switch-item"
+              [class.active]="isActiveTenant(tenant)"
+              (click)="switchTenant(tenant)"
+            >
+              <span class="tenant-switch-avatar" [class.active]="isActiveTenant(tenant)">
+                {{ tenant.id[0].toUpperCase() }}
+              </span>
+              <span class="tenant-switch-info">
+                <span class="tenant-switch-name">{{ capitalizeTenant(tenant.id) }}</span>
+                <span class="tenant-switch-domain">{{ tenant.domain }}</span>
+              </span>
+              @if (isActiveTenant(tenant)) {
+                <ion-icon name="checkmark-circle" class="tenant-active-icon"></ion-icon>
+              }
+            </button>
+          }
+        </div>
+      }
+
+      <!-- Nav items -->
+      <ion-list lines="none">
+        @for (item of items; track item.path) {
+          <ion-menu-toggle auto-hide="true">
+            <ion-item
+              button
+              [routerLink]="item.path"
+              routerLinkActive="menu-item-active"
+              (click)="navigate(item.path)"
+            >
+              <ion-icon [name]="item.icon" slot="start"></ion-icon>
+              <ion-label>{{ item.label }}</ion-label>
+            </ion-item>
+          </ion-menu-toggle>
+        }
+
+        <div class="logout-divider"></div>
+
+        <ion-menu-toggle auto-hide="true">
+          <ion-item button class="logout-item" (click)="logout()">
+            <ion-icon name="log-out-outline" slot="start"></ion-icon>
+            <ion-label>Cerrar Sesión</ion-label>
+          </ion-item>
+        </ion-menu-toggle>
+      </ion-list>
+
+    </ion-content>
+  </ion-menu>
+}

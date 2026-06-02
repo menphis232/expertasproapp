@@ -1,0 +1,133 @@
+:host {
+  ion-modal.del-modal {
+    --width: min(380px, calc(100vw - 2.5rem));
+    --height: auto;
+    --border-radius: 14px;
+    --box-shadow: 0 18px 48px rgba(15, 23, 42, 0.14);
+    --backdrop-opacity: 0.45;
+  }
+}
+
+.del-shell {
+  background: #ffffff;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.del-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.1rem 0.85rem;
+  border-bottom: 1px solid #f1f5f9;
+
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+}
+
+.del-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  font-family: inherit;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  ion-icon {
+    font-size: 1.4rem;
+  }
+}
+
+.del-body {
+  padding: 1.35rem 1.25rem 1.1rem;
+  text-align: center;
+}
+
+.del-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 0.85rem;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: #dc2626;
+
+  ion-icon {
+    font-size: 1.5rem;
+  }
+}
+
+.del-message {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+  line-height: 1.45;
+}
+
+.del-client {
+  margin: 0.55rem 0 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.del-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem 1.1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.del-btn-cancel,
+.del-btn-delete {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+}
+
+.del-btn-cancel {
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+}
+
+.del-btn-delete {
+  border: none;
+  background: #dc2626;
+  color: #ffffff;
+
+  ion-spinner {
+    width: 22px;
+    height: 22px;
+    --color: #ffffff;
+  }
+}

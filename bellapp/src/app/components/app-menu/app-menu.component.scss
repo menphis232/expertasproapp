@@ -1,0 +1,180 @@
+.menu-content {
+  --background: #ffffff;
+}
+
+// ─── User block ───────────────────────────────────────────────────────────────
+
+.user-block {
+  padding: 1.25rem 1rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 0.25rem;
+}
+
+.user-name {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 1rem;
+}
+
+.tenant-badge {
+  display: inline-block;
+  background-color: var(--ion-color-primary);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  letter-spacing: 0.03em;
+}
+
+// ─── Tenant switcher ──────────────────────────────────────────────────────────
+
+.section-label {
+  padding: 0.85rem 1rem 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+
+.tenant-switcher {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0 0.75rem 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 0.25rem;
+}
+
+.tenant-switch-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  background: #f8f7ff;
+  border: 1.5px solid transparent;
+  border-radius: 14px;
+  padding: 0.65rem 0.75rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+
+  &.active {
+    background: #f0ebff;
+    border-color: rgba(109, 40, 217, 0.2);
+  }
+
+  &:hover:not(.active):not(:disabled) {
+    background: #ede9ff;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.tenant-switch-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #e2e8f0;
+  color: #64748b;
+  font-size: 0.95rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+
+  &.active {
+    background: linear-gradient(135deg, #6d28d9 0%, #9333ea 100%);
+    color: #ffffff;
+  }
+}
+
+.tenant-switch-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.tenant-switch-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tenant-switch-domain {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tenant-active-icon {
+  font-size: 1.25rem;
+  color: var(--ion-color-primary);
+  flex-shrink: 0;
+}
+
+// ─── Nav items ────────────────────────────────────────────────────────────────
+
+ion-list {
+  padding-top: 0.25rem;
+  padding-bottom: 0;
+  background: transparent;
+}
+
+ion-item {
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+  --min-height: 52px;
+  --background: transparent;
+  --color: #1e293b;
+  font-size: 0.95rem;
+  border-left: 3px solid transparent;
+
+  ion-icon {
+    color: #64748b;
+    font-size: 1.25rem;
+    margin-right: 0.25rem;
+  }
+}
+
+ion-item.menu-item-active {
+  --background: rgba(124, 58, 237, 0.08);
+  --color: var(--ion-color-primary);
+  border-left: 3px solid var(--ion-color-primary);
+  font-weight: 600;
+
+  ion-icon {
+    color: var(--ion-color-primary);
+  }
+}
+
+.logout-divider {
+  height: 1px;
+  background-color: #e2e8f0;
+  margin: 0.5rem 1rem;
+}
+
+.logout-item {
+  --color: #1e293b;
+  border-left: 3px solid transparent;
+
+  ion-icon {
+    color: #64748b;
+  }
+}

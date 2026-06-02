@@ -1,0 +1,11 @@
+{
+  "name": "expertas-pro",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular",
+  "project": {
+    "name": "expertas-pro"
+  }
+}
+

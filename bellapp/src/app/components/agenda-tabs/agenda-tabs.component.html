@@ -1,0 +1,22 @@
+<nav class="agenda-tabs" aria-label="Vista de agenda">
+  <a
+    class="tab"
+    routerLink="/dashboard"
+    routerLinkActive="tab-active"
+    [class.tab-active]="active === 'dashboard'"
+    [attr.aria-current]="active === 'dashboard' ? 'page' : null"
+  >
+    <ion-icon name="home-outline" aria-hidden="true"></ion-icon>
+    <span>DASHBOARD</span>
+  </a>
+  <a
+    class="tab"
+    routerLink="/calendar"
+    routerLinkActive="tab-active"
+    [class.tab-active]="active === 'calendar'"
+    [attr.aria-current]="active === 'calendar' ? 'page' : null"
+  >
+    <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+    <span>CALENDARIO</span>
+  </a>
+</nav>

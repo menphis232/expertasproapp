@@ -1,0 +1,52 @@
+<ion-modal
+  class="del-modal"
+  [isOpen]="isOpen()"
+  [backdropDismiss]="!deleting()"
+  (didDismiss)="onDismiss()">
+  <ng-template>
+    <div class="del-shell">
+      <header class="del-topbar">
+        <h2>Eliminar cita</h2>
+        <button
+          type="button"
+          class="del-close-btn"
+          (click)="close()"
+          [disabled]="deleting()"
+          aria-label="Cerrar">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </header>
+
+      <div class="del-body">
+        <span class="del-icon">
+          <ion-icon name="trash-outline"></ion-icon>
+        </span>
+        <p class="del-message">¿Está seguro que desea eliminar esta cita?</p>
+        @if (clientName()) {
+          <p class="del-client">{{ clientName() }}</p>
+        }
+      </div>
+
+      <footer class="del-footer">
+        <button
+          type="button"
+          class="del-btn-cancel"
+          (click)="close()"
+          [disabled]="deleting()">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="del-btn-delete"
+          (click)="confirm()"
+          [disabled]="deleting()">
+          @if (deleting()) {
+            <ion-spinner name="crescent"></ion-spinner>
+          } @else {
+            Eliminar
+          }
+        </button>
+      </footer>
+    </div>
+  </ng-template>
+</ion-modal>

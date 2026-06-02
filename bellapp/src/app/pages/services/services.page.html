@@ -1,0 +1,150 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button color="light"></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Servicios</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="svc-content">
+  <div class="action-buttons">
+    <ion-button expand="block" class="btn-create" (click)="openCreate()">
+      <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+      CREAR SERVICIO
+    </ion-button>
+  </div>
+
+  <div class="list-card">
+    <div class="list-card-header">
+      <div class="list-title-group">
+        <span class="list-title">Lista de Servicios</span>
+        <span class="list-count">{{ list().length }} servicios</span>
+      </div>
+      <ion-button fill="outline" size="small" class="sort-btn" (click)="toggleSort()">
+        <ion-icon slot="start" [name]="sortDesc() ? 'arrow-down-outline' : 'arrow-up-outline'"></ion-icon>
+        {{ sortDesc() ? 'DESCENDENTE' : 'ASCENDENTE' }}
+      </ion-button>
+    </div>
+
+    <hr class="card-divider" />
+
+    @if (list().length === 0) {
+      <div class="empty-state">
+        <ion-icon name="construct-outline" class="empty-icon"></ion-icon>
+        <p class="empty-text">No hay servicios registrados</p>
+        <ion-button fill="outline" size="small" class="btn-first" (click)="openCreate()">
+          CREAR PRIMER SERVICIO
+        </ion-button>
+      </div>
+    } @else {
+      <ion-list lines="full" class="svc-list">
+        @for (s of list(); track s.id) {
+          <ion-item>
+            <ion-label>
+              <h2>{{ s.description }}</h2>
+              <p class="muted">{{ s.fields.length }} campo{{ s.fields.length !== 1 ? 's' : '' }} configurado{{ s.fields.length !== 1 ? 's' : '' }}</p>
+            </ion-label>
+            <ion-button fill="clear" slot="end" (click)="openEdit(s)">
+              <ion-icon name="create-outline"></ion-icon>
+            </ion-button>
+            <ion-button fill="clear" color="danger" slot="end" (click)="confirmDelete(s)">
+              <ion-icon name="trash-outline"></ion-icon>
+            </ion-button>
+          </ion-item>
+        }
+      </ion-list>
+    }
+  </div>
+</ion-content>
+
+<!-- ── CREATE / EDIT MODAL ──────────────────────────────── -->
+<ion-modal
+  [isOpen]="modalOpen()"
+  (didDismiss)="closeModal()"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1">
+  <ng-template>
+
+    <div class="pf-modal-header">Servicio</div>
+
+    <ion-content class="pf-content">
+      <form [formGroup]="form" (ngSubmit)="save()" id="svcForm">
+
+        <!-- Descripción del servicio -->
+        <div class="cf-field">
+          <label class="cf-label">Descripción <span class="cf-required">*</span></label>
+          <input
+            class="cf-input"
+            formControlName="description"
+            placeholder="Ingrese descripción del servicio"
+            type="text"
+            autocomplete="off">
+        </div>
+
+        <!-- Configuración de campos -->
+        <div class="svc-section-label">Configuración de campos</div>
+
+        <div formArrayName="campos">
+          @for (campo of camposArray.controls; track $index) {
+            <div class="campo-card" [formGroupName]="$index">
+              <div class="campo-top-row">
+                <ion-icon name="reorder-three-outline" class="drag-handle"></ion-icon>
+                <div class="campo-desc-wrapper">
+                  <label class="cf-label-sm">Descripción</label>
+                  <input
+                    class="cf-input cf-input-sm"
+                    formControlName="descripcion"
+                    placeholder="Descripción del campo"
+                    type="text"
+                    autocomplete="off">
+                </div>
+                <button type="button" class="cf-delete-btn" (click)="removeCampo($index)">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
+
+              <div class="campo-row">
+                <label class="cf-label-sm">Requerido</label>
+                <input type="checkbox" class="campo-checkbox" formControlName="requerido">
+              </div>
+
+              <div class="campo-row campo-row-col">
+                <label class="cf-label-sm">Tipo de dato</label>
+                <div class="cf-select-wrapper">
+                  <select class="cf-select" formControlName="tipoDato">
+                    @for (t of dataTypes; track t) {
+                      <option [value]="t">{{ t }}</option>
+                    }
+                  </select>
+                  <ion-icon name="chevron-down-outline" class="cf-chevron"></ion-icon>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <button type="button" class="svc-add-campo-btn" (click)="addCampo()">
+          <ion-icon name="add-outline"></ion-icon> Agregar campo
+        </button>
+
+        <div style="height: 1rem;"></div>
+
+      </form>
+    </ion-content>
+
+    <ion-footer class="pf-footer">
+      <div class="pf-actions">
+        <button type="submit" form="svcForm" class="pf-btn-save">
+          <ion-icon name="add-outline"></ion-icon>
+          <strong>Guardar</strong>
+        </button>
+        <button type="button" class="pf-btn-cancel" (click)="closeModal()">
+          <ion-icon name="close-outline"></ion-icon>
+          <strong>Cancelar</strong>
+        </button>
+      </div>
+    </ion-footer>
+
+  </ng-template>
+</ion-modal>

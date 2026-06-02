@@ -1,0 +1,7 @@
+Cuenta de prueba para revisores (Google Play, QA, demos)
+============================================================
+
+Correo electrónico: admin@example.com
+Contraseña:        123456
+
+Usar solo en entornos de prueba. No usar en producción.

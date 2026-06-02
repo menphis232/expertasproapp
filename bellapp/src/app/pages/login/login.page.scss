@@ -1,0 +1,349 @@
+// ─── Shared background gradient ──────────────────────────────────────────────
+
+.login-content {
+  --background: linear-gradient(
+    160deg,
+    #4c1d95 0%,
+    #6d28d9 30%,
+    #9333ea 60%,
+    #c026d3 80%,
+    #db2777 100%
+  );
+}
+
+// ─── Login form (centered card) ───────────────────────────────────────────────
+
+.login-screen {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1.25rem 2rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: #f9f7ff;
+  border-radius: 28px;
+  padding: 2rem 1.5rem 1.75rem;
+  box-shadow:
+    0 24px 48px rgba(15, 23, 42, 0.18),
+    0 8px 16px rgba(91, 33, 182, 0.12);
+}
+
+.brand {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.brand-icon {
+  font-size: 4.5rem;
+  color: #1e293b;
+  stroke-width: 28px;
+  margin-bottom: 0.5rem;
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #0f172a;
+}
+
+.tagline {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  color: #94a3b8;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.field-group {
+  margin-bottom: 1rem;
+}
+
+.field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.5rem;
+
+  ion-icon {
+    font-size: 1rem;
+    color: #64748b;
+  }
+}
+
+.field-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1.5px solid transparent;
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  font-size: 0.95rem;
+  color: #1e293b;
+  outline: none;
+  font-family: inherit;
+
+  &::placeholder {
+    color: #94a3b8;
+  }
+
+  &:focus {
+    border-color: rgba(128, 135, 200, 0.4);
+  }
+}
+
+.password-wrap {
+  position: relative;
+
+  .field-input {
+    padding-right: 3rem;
+  }
+}
+
+.toggle-password {
+  position: absolute;
+  right: 0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  background: transparent;
+  border: none;
+  padding: 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  cursor: pointer;
+
+  ion-icon {
+    font-size: 1.25rem;
+  }
+}
+
+.field-error {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--ion-color-danger);
+}
+
+.submit-btn {
+  margin-top: 0.75rem;
+  --background: #8087c8;
+  --background-activated: #6e77b5;
+  --background-hover: #8e95d4;
+  --border-radius: 50px;
+  --box-shadow: 0 4px 14px rgba(128, 135, 200, 0.35);
+  height: 52px;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+// ─── Tenant selector (full-screen) ────────────────────────────────────────────
+
+.tenant-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+// Purple gradient header section
+.tenant-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem 1.5rem 2.5rem;
+  text-align: center;
+}
+
+.tenant-header-icon-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(4px);
+}
+
+.tenant-header-icon {
+  font-size: 2.5rem;
+  color: #ffffff;
+}
+
+.tenant-header-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.01em;
+}
+
+.tenant-header-subtitle {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 400;
+  line-height: 1.5;
+  max-width: 260px;
+}
+
+// White body with rounded top corners
+.tenant-body {
+  flex: 1;
+  background: #f3f0ff;
+  border-radius: 28px 28px 0 0;
+  padding: 1.5rem 1.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+// List of tenant cards
+.tenant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.tenant-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  background: #ffffff;
+  border: none;
+  border-radius: 18px;
+  padding: 0.9rem 1rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: 0 2px 12px rgba(109, 40, 217, 0.08);
+  transition: box-shadow 0.15s, transform 0.1s;
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 4px 20px rgba(109, 40, 217, 0.15);
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(109, 40, 217, 0.1);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Letter avatar (purple gradient rounded square)
+.tenant-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6d28d9 0%, #9333ea 100%);
+  color: #ffffff;
+  font-size: 1.15rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: 0;
+}
+
+.tenant-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  overflow: hidden;
+}
+
+.tenant-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tenant-domain {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tenant-chevron {
+  font-size: 1.1rem;
+  color: #cbd5e1;
+  flex-shrink: 0;
+}
+
+.tenant-chevron-spinner {
+  width: 18px;
+  height: 18px;
+  color: #8087c8;
+  flex-shrink: 0;
+}
+
+// "Volver al login" link-style button
+.back-to-login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 50px;
+  padding: 0.85rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748b;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  margin-top: auto;
+
+  ion-icon {
+    font-size: 1rem;
+  }
+
+  &:hover:not(:disabled) {
+    background: #f1f5f9;
+    color: #334155;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

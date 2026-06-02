@@ -1,0 +1,133 @@
+<ion-modal [isOpen]="isOpen()" (didDismiss)="onDismiss()">
+  <ng-template>
+    <div class="cf-modal-header">
+      <h2>Ficha del Paciente</h2>
+    </div>
+
+    <ion-content class="cf-content">
+      @if (loading()) {
+        <div class="cf-loading">
+          <ion-spinner name="crescent"></ion-spinner>
+        </div>
+      } @else if (detail()) {
+        <div class="cf-profile">
+          <span class="cf-avatar">{{ initials() }}</span>
+          <h3 class="cf-name">{{ detail()!.nombreCompleto }}</h3>
+          <button type="button" class="cf-edit-btn" (click)="onEdit()">
+            <ion-icon name="create-outline"></ion-icon>
+            Editar
+          </button>
+        </div>
+
+        <section class="cf-card">
+          <h4 class="cf-card-title">Información básica</h4>
+          <div class="cf-grid">
+            <div class="cf-field">
+              <span class="cf-label">USUARIO</span>
+              <span class="cf-value">{{ detail()!.userAssigned || '--' }}</span>
+            </div>
+            <div class="cf-field">
+              <span class="cf-label">FECHA DE CREACIÓN</span>
+              <span class="cf-value">{{ formatCreatedAt(detail()!.createdAt) }}</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="cf-card">
+          <h4 class="cf-card-title">Datos generales</h4>
+          @if (generalFields().length === 0) {
+            <p class="cf-empty-inline">Sin datos disponibles...</p>
+          } @else {
+            <div class="cf-grid">
+              @for (field of generalFields(); track field.label) {
+                <div class="cf-field">
+                  <span class="cf-label">{{ field.label }}</span>
+                  <span class="cf-value">{{ field.value }}</span>
+                </div>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="cf-card">
+          <h4 class="cf-card-title">Anamnesis</h4>
+          @if (!hasAnamnesis()) {
+            <p class="cf-empty-inline">Sin datos disponibles...</p>
+          } @else {
+            <div class="cf-anamnesis-block">
+              @for (field of anamnesisFields(); track field.label) {
+                <div class="cf-anamnesis-item">
+                  <span class="cf-anamnesis-label">{{ field.label }}</span>
+                  <span class="cf-anamnesis-value">{{ field.value }}</span>
+                </div>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="cf-card">
+          <h4 class="cf-card-title">Historial de citas</h4>
+          @if (detail()!.citas.length === 0) {
+            <p class="cf-empty-inline">Sin datos disponibles...</p>
+          } @else {
+            <ul class="cf-citas-list">
+              @for (cita of detail()!.citas; track cita.id) {
+                <li class="cf-cita-item">
+                  <span class="cf-cita-icon">
+                    <ion-icon name="calendar-outline"></ion-icon>
+                  </span>
+                  <div class="cf-cita-info">
+                    <strong>{{ cita.servicio }}</strong>
+                    <div class="cf-cita-meta">
+                      <span class="cf-cita-badge" [attr.data-status]="citaStatusClass(cita.estado)">
+                        {{ citaStatusLabel(cita.estado) }}
+                      </span>
+                      <span class="cf-cita-date">{{ formatCitaDate(cita.fecha) }}</span>
+                    </div>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <section class="cf-card">
+          <h4 class="cf-card-title">Movimientos del producto</h4>
+          <div class="cf-empty-block">
+            <ion-icon name="cube-outline" class="cf-empty-icon"></ion-icon>
+            <p>Sin datos disponibles...</p>
+          </div>
+        </section>
+
+        <section class="cf-card">
+          <h4 class="cf-card-title">Enfermedades</h4>
+          @if (detail()!.enfermedades.length === 0) {
+            <p class="cf-empty-inline">Sin datos disponibles...</p>
+          } @else {
+            <ul class="cf-simple-list">
+              @for (item of detail()!.enfermedades; track item.id) {
+                <li>
+                  <strong>{{ item.description }}</strong>
+                  @if (item.comment) {
+                    <span>{{ item.comment }}</span>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <div class="cf-bottom-spacer"></div>
+      } @else {
+        <p class="cf-empty-inline cf-empty-page">No se pudo cargar la ficha.</p>
+      }
+    </ion-content>
+
+    <ion-footer class="cf-footer">
+      <button type="button" class="cf-close-btn" (click)="close()">
+        <ion-icon name="close-outline"></ion-icon>
+        <strong>Cerrar</strong>
+      </button>
+    </ion-footer>
+  </ng-template>
+</ion-modal>

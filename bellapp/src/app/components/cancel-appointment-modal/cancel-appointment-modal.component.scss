@@ -1,0 +1,133 @@
+:host {
+  ion-modal.can-modal {
+    --width: min(380px, calc(100vw - 2.5rem));
+    --height: auto;
+    --border-radius: 14px;
+    --box-shadow: 0 18px 48px rgba(15, 23, 42, 0.14);
+    --backdrop-opacity: 0.45;
+  }
+}
+
+.can-shell {
+  background: #ffffff;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.can-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.1rem 0.85rem;
+  border-bottom: 1px solid #f1f5f9;
+
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+}
+
+.can-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  font-family: inherit;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  ion-icon {
+    font-size: 1.4rem;
+  }
+}
+
+.can-body {
+  padding: 1.35rem 1.25rem 1.1rem;
+  text-align: center;
+}
+
+.can-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 0.85rem;
+  border-radius: 50%;
+  background: #ffedd5;
+  color: #ea580c;
+
+  ion-icon {
+    font-size: 1.5rem;
+  }
+}
+
+.can-message {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+  line-height: 1.45;
+}
+
+.can-client {
+  margin: 0.55rem 0 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.can-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem 1.1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.can-btn-back,
+.can-btn-confirm {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+}
+
+.can-btn-back {
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+}
+
+.can-btn-confirm {
+  border: none;
+  background: #ea580c;
+  color: #ffffff;
+
+  ion-spinner {
+    width: 22px;
+    height: 22px;
+    --color: #ffffff;
+  }
+}

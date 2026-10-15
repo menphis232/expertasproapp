@@ -42,6 +42,24 @@ export interface Medication {
   comment: string;
 }
 
+export interface ClientFieldWrite {
+  id: number;
+  descripcion: string;
+  valor: string | null;
+}
+
+export interface ClientWritePayload {
+  nombres: string;
+  apellidos: string;
+  fecha_nacimiento?: string | null;
+  rut?: string | null;
+  referido_por?: string | null;
+  credenciales?: string | null;
+  enfermedades: { description: string; comment: string }[];
+  medicamentos: { description: string; comment: string }[];
+  campos_valores: ClientFieldWrite[];
+}
+
 export interface Client {
   id: string;
   nombres: string;
@@ -84,6 +102,7 @@ interface ApiClient {
   fecha_nacimiento?: string;
   rut?: string;
   referidoPor?: string;
+  referido_por?: string;
   credenciales?: string;
   enfermedades?: Illness[];
   medicamentos?: Medication[];
@@ -92,6 +111,27 @@ interface ApiClient {
   updated_at?: string;
   createdAt?: Date | string;
   updatedAt?: Date | string;
+}
+
+interface ApiClientsPage {
+  current_page?: number;
+  data?: ApiClient[];
+  last_page?: number;
+  per_page?: number;
+  total?: number;
+}
+
+interface ClientsPageMeta {
+  currentPage: number;
+  lastPage: number;
+  perPage: number;
+  total: number;
+}
+
+interface ClientsListQuery {
+  perPage: number;
+  orderBy: string;
+  sortedBy: 'asc' | 'desc';
 }
 
 interface ApiClientCita {
@@ -132,14 +172,7 @@ export class ClientsService {
   }
 
   async refresh(): Promise<void> {
-    const remote = await fetchTenantList<ApiClient>(
-      this.http,
-      this.tenant,
-      environment.apiPaths.clients,
-      () => this.clients.map((c) => ({ ...c, id: c.id }))
-    );
-    this.clients = remote.map((c) => this.parseClient(c));
-    this.saveToStorage();
+    await this.loadClientsPage(1, true);
 
     const fields = await fetchTenantList<ApiFieldConfig>(
       this.http,
@@ -148,9 +181,26 @@ export class ClientsService {
       () => this.customFields.map((f) => this.fieldToDto(f))
     );
     if (fields.length > 0) {
-      this.customFields = fields.map((f) => this.parseFieldConfig(f));
+      this.fieldConfigCache = fields.map((f) => this.parseApiFieldConfig(f));
+      this.customFields = this.fieldConfigCache.map((f) => this.configToCustomField(f));
       this.saveToStorage();
     }
+  }
+
+  getFieldConfigs(): ClientFieldConfig[] {
+    return [...this.fieldConfigCache].sort((a, b) => a.position - b.position);
+  }
+
+  private configToCustomField(field: ClientFieldConfig): CustomField {
+    return {
+      id: field.id != null ? String(field.id) : '',
+      description: field.descripcion,
+      dataType: this.mapFieldDataType(field.tipo_dato?.descripcion),
+      role: field.roles[0]?.name ?? 'Todos',
+      columnNumber: field.show_column,
+      required: field.requerido,
+      order: field.position,
+    };
   }
 
   private parseFieldConfig(raw: ApiFieldConfig): CustomField {
@@ -217,7 +267,7 @@ export class ClientsService {
           ? new Date(raw.fechaNacimiento)
           : undefined),
       rut: raw.rut,
-      referidoPor: raw.referidoPor,
+      referidoPor: raw.referidoPor ?? api.referido_por,
       credenciales: raw.credenciales,
       enfermedades: raw.enfermedades ?? [],
       medicamentos: raw.medicamentos ?? [],
@@ -233,6 +283,179 @@ export class ClientsService {
 
   private clients: Client[] = [];
   private customFields: CustomField[] = [];
+  private fieldConfigCache: ClientFieldConfig[] = [];
+  private pageMeta: ClientsPageMeta = {
+    currentPage: 1,
+    lastPage: 1,
+    perPage: 20,
+    total: 0,
+  };
+
+  private listQuery: ClientsListQuery = {
+    perPage: 20,
+    orderBy: 'nombres',
+    sortedBy: 'desc',
+  };
+
+  setClientListSort(sortedBy: 'asc' | 'desc'): void {
+    this.listQuery = {
+      ...this.listQuery,
+      orderBy: 'nombres',
+      sortedBy,
+    };
+  }
+
+  hasMoreClients(): boolean {
+    return this.pageMeta.currentPage < this.pageMeta.lastPage;
+  }
+
+  clientsTotal(): number {
+    return this.pageMeta.total > 0 ? this.pageMeta.total : this.clients.length;
+  }
+
+  async loadMoreClients(): Promise<void> {
+    if (!this.hasMoreClients()) {
+      return;
+    }
+    await this.loadClientsPage(this.pageMeta.currentPage + 1, false);
+  }
+
+  private async loadRemainingClientPages(): Promise<void> {
+    let guard = 0;
+    while (this.hasMoreClients() && guard < 20) {
+      const before = this.pageMeta.currentPage;
+      try {
+        await this.loadClientsPage(before + 1, false);
+      } catch (error) {
+        console.warn('[ClientsService] No se pudo cargar la página siguiente de clientes', error);
+        break;
+      }
+      if (this.pageMeta.currentPage <= before) {
+        break;
+      }
+      guard += 1;
+    }
+  }
+
+  private async loadClientsPage(page: number, replace: boolean): Promise<void> {
+    if (!environment.apiEnabled || !this.tenant.canUseTenantApi()) {
+      this.pageMeta = {
+        currentPage: 1,
+        lastPage: 1,
+        perPage: this.clients.length || 30,
+        total: this.clients.length,
+      };
+      return;
+    }
+
+    try {
+      const body = await firstValueFrom(
+        this.http.get<ApiClientsPage | ApiClient[]>(environment.apiPaths.clients, {
+          context: tenantApiContext(),
+          params: {
+            page: String(page),
+            perPage: String(this.listQuery.perPage),
+            orderBy: this.listQuery.orderBy,
+            sortedBy: this.listQuery.sortedBy,
+          },
+        })
+      );
+      const parsed = this.parseClientsPage(body, page);
+      if (parsed.items.length === 0 && parsed.total > 0) {
+        throw new Error('La página de clientes llegó sin registros');
+      }
+
+      if (replace) {
+        this.clients = parsed.items;
+      } else {
+        const known = new Set(this.clients.map((client) => client.id));
+        const fresh = parsed.items.filter((client) => client.id && !known.has(client.id));
+        if (fresh.length === 0) {
+          this.pageMeta = { ...this.pageMeta, currentPage: this.pageMeta.lastPage };
+          this.saveToStorage();
+          return;
+        }
+        this.clients = [...this.clients, ...fresh];
+      }
+
+      this.pageMeta = {
+        currentPage: parsed.currentPage,
+        lastPage: Math.max(parsed.lastPage, 1),
+        perPage: parsed.perPage,
+        total: parsed.total,
+      };
+      this.saveToStorage();
+    } catch (error) {
+      console.warn(
+        `[ClientsService] GET /v1/clientes?page=${page}&perPage=${this.listQuery.perPage}&orderBy=${this.listQuery.orderBy}&sortedBy=${this.listQuery.sortedBy} falló`,
+        error
+      );
+      if (replace && environment.fallbackToLocalStorage) {
+        this.pageMeta = {
+          currentPage: 1,
+          lastPage: 1,
+          perPage: this.clients.length || 30,
+          total: this.clients.length,
+        };
+        return;
+      }
+      throw error;
+    }
+  }
+
+  private parseClientsPage(
+    body: ApiClientsPage | ApiClient[],
+    requestedPage: number
+  ): { items: Client[]; currentPage: number; lastPage: number; perPage: number; total: number } {
+    if (Array.isArray(body)) {
+      const items = body.map((client) => this.parseClient(client));
+      return {
+        items,
+        currentPage: 1,
+        lastPage: 1,
+        perPage: items.length || 30,
+        total: items.length,
+      };
+    }
+
+    const source = this.unwrapClientsPayload(body);
+    if (Array.isArray(source)) {
+      const items = source.map((client) => this.parseClient(client));
+      return {
+        items,
+        currentPage: 1,
+        lastPage: 1,
+        perPage: items.length || this.listQuery.perPage,
+        total: items.length,
+      };
+    }
+
+    const rows = Array.isArray(source.data) ? source.data : [];
+    const items = rows.map((client) => this.parseClient(client));
+    const lastPage = source.last_page && source.last_page > 0 ? source.last_page : 1;
+    return {
+      items,
+      currentPage: source.current_page ?? requestedPage,
+      lastPage,
+      perPage: source.per_page && source.per_page > 0 ? source.per_page : this.listQuery.perPage,
+      total: source.total ?? items.length,
+    };
+  }
+
+  private unwrapClientsPayload(
+    body: ApiClientsPage | ApiClient[]
+  ): ApiClientsPage | ApiClient[] {
+    if (Array.isArray(body) || !body?.data || Array.isArray(body.data)) {
+      return body;
+    }
+
+    const nested = body.data as unknown as ApiClientsPage;
+    if (nested && typeof nested === 'object' && (nested.current_page != null || Array.isArray(nested.data))) {
+      return nested;
+    }
+
+    return body;
+  }
 
   private loadFromStorage(): void {
     const stored = localStorage.getItem(this.storageKey);
@@ -496,7 +719,79 @@ export class ClientsService {
       )
     );
 
-    return unwrapList(body).map((item) => this.parseApiFieldConfig(item));
+    const parsed = unwrapList(body).map((item) => this.parseApiFieldConfig(item));
+    if (parsed.length > 0) {
+      this.fieldConfigCache = parsed;
+    }
+    return parsed;
+  }
+
+  async saveClient(id: string | null, payload: ClientWritePayload): Promise<Client | null> {
+    const applyLocal = (): Client | null => {
+      const data = this.writePayloadToClient(payload);
+      if (id) {
+        return this.updateClient(id, data);
+      }
+      return this.addClient(data);
+    };
+
+    if (!environment.apiEnabled || !this.tenant.canUseTenantApi()) {
+      return applyLocal();
+    }
+
+    const request = id
+      ? this.http.put<ApiClient | { data?: ApiClient }>(
+          `${environment.apiPaths.clients}/${id}`,
+          payload,
+          { context: tenantApiContext() }
+        )
+      : this.http.post<ApiClient | { data?: ApiClient }>(
+          environment.apiPaths.clients,
+          payload,
+          { context: tenantApiContext() }
+        );
+
+    const body = await firstValueFrom(request);
+    const dto = unwrapResource(body) ?? (body as ApiClient);
+    const saved = this.parseClient({ ...dto, id: dto.id ?? id ?? '' });
+    const index = this.clients.findIndex((c) => c.id === saved.id);
+    if (index !== -1) {
+      this.clients[index] = { ...this.clients[index], ...saved };
+    } else if (saved.id) {
+      this.clients.push({
+        ...saved,
+        enfermedades: saved.enfermedades ?? [],
+        medicamentos: saved.medicamentos ?? [],
+        createdAt: saved.createdAt ?? new Date(),
+        updatedAt: new Date(),
+      });
+    }
+    this.saveToStorage();
+    return saved.id ? saved : applyLocal();
+  }
+
+  private writePayloadToClient(payload: ClientWritePayload): Omit<Client, 'id' | 'createdAt' | 'updatedAt'> {
+    return {
+      nombres: payload.nombres,
+      apellidos: payload.apellidos,
+      fechaNacimiento: payload.fecha_nacimiento ? new Date(payload.fecha_nacimiento) : undefined,
+      rut: payload.rut ?? undefined,
+      referidoPor: payload.referido_por ?? undefined,
+      credenciales: payload.credenciales ?? undefined,
+      enfermedades: payload.enfermedades.map((e, i) => ({
+        id: `${Date.now()}_${i}`,
+        description: e.description,
+        comment: e.comment,
+      })),
+      medicamentos: payload.medicamentos.map((m, i) => ({
+        id: `${Date.now()}_${i}`,
+        description: m.description,
+        comment: m.comment,
+      })),
+      customFields: Object.fromEntries(
+        payload.campos_valores.map((f) => [String(f.id), f.valor ?? ''])
+      ),
+    };
   }
 
   /** Persiste la configuración de campos en la API. */

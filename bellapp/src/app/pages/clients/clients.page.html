@@ -23,7 +23,15 @@
     <div class="list-card-header">
       <div class="list-title-group">
         <span class="list-title">Lista de Clientes</span>
-        <span class="list-count">{{ filtered().length }} clientes</span>
+        <span class="list-count">
+          @if (searchQuery().trim()) {
+            {{ filtered().length }} encontrados
+          } @else if (hasMore()) {
+            {{ filtered().length }} de {{ totalClients() }} clientes
+          } @else {
+            {{ totalClients() }} clientes
+          }
+        </span>
       </div>
       <ion-button fill="outline" size="small" class="sort-btn" (click)="toggleSort()">
         <ion-icon slot="start" [name]="sortDesc() ? 'arrow-down-outline' : 'arrow-up-outline'"></ion-icon>
@@ -33,7 +41,33 @@
 
     <hr class="card-divider" />
 
-    @if (filtered().length === 0) {
+    <div class="client-search">
+      <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
+      <input
+        type="search"
+        [value]="searchQuery()"
+        (input)="onSearch($event)"
+        placeholder="Buscar por nombre o RUT"
+        autocomplete="off"
+        enterkeyhint="search">
+      @if (searchQuery()) {
+        <button type="button" class="search-clear" (click)="clearSearch()" aria-label="Limpiar búsqueda">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      }
+    </div>
+
+    @if (loading() && clients().length === 0) {
+      <div class="empty-state">
+        <ion-spinner name="crescent" color="primary" class="clients-loader"></ion-spinner>
+        <p class="empty-text">Cargando clientes…</p>
+      </div>
+    } @else if (filtered().length === 0 && searchQuery().trim()) {
+      <div class="empty-state">
+        <ion-icon name="search-outline" class="empty-icon"></ion-icon>
+        <p class="empty-text">Ningún cliente coincide con «{{ searchQuery().trim() }}»</p>
+      </div>
+    } @else if (filtered().length === 0) {
       <div class="empty-state">
         <ion-icon name="people-outline" class="empty-icon"></ion-icon>
         <p class="empty-text">No hay clientes registrados</p>
@@ -61,7 +95,20 @@
           </ion-item>
         }
       </ion-list>
+      @if (loadingMore()) {
+        <div class="clients-loading-more">
+          <ion-spinner name="crescent" color="primary" class="clients-loader"></ion-spinner>
+          <p>Cargando más clientes…</p>
+        </div>
+      }
     }
+
+    <ion-infinite-scroll
+      class="clients-infinite"
+      threshold="120px"
+      [disabled]="!hasMore() || loading()"
+      (ionInfinite)="loadMore($event)">
+    </ion-infinite-scroll>
   </div>
 </ion-content>
 
@@ -118,6 +165,98 @@
             </select>
             <ion-icon name="chevron-down-outline" class="cf-chevron"></ion-icon>
           </div>
+        </div>
+
+        @if (fieldsLoading()) {
+          <p class="cf-fields-loading">Cargando campos configurados…</p>
+        }
+
+        <div formArrayName="campos">
+          @for (cfg of visibleConfigs(); track cfg.position + '-' + cfg.descripcion; let i = $index) {
+            <div [formGroupName]="i">
+              @switch (campoGroup(i).get('tipo')?.value) {
+                @case ('section') {
+                  <div class="cf-section-label">{{ cfg.descripcion }}</div>
+                }
+                @case ('yes_no') {
+                  <div class="cf-field">
+                    <label class="cf-label">
+                      {{ cfg.descripcion }}
+                      @if (cfg.requerido) { <span class="cf-required">*</span> }
+                    </label>
+                    <div class="cf-yesno">
+                      <label><input type="radio" formControlName="valor" value="si"> Sí</label>
+                      <label><input type="radio" formControlName="valor" value="no"> No</label>
+                    </div>
+                  </div>
+                }
+                @case ('yes_no_which') {
+                  <div class="cf-field">
+                    <label class="cf-label">
+                      {{ cfg.descripcion }}
+                      @if (cfg.requerido) { <span class="cf-required">*</span> }
+                    </label>
+                    <div class="cf-yesno">
+                      <label><input type="radio" formControlName="valor" value="si"> Sí</label>
+                      <label><input type="radio" formControlName="valor" value="no"> No</label>
+                    </div>
+                    @if (campoGroup(i).get('valor')?.value === 'si') {
+                      <input class="cf-input cf-which" formControlName="cuales" type="text" placeholder="¿Cuáles?" autocomplete="off">
+                    }
+                  </div>
+                }
+                @case ('large_text') {
+                  <div class="cf-field">
+                    <label class="cf-label">
+                      {{ cfg.descripcion }}
+                      @if (cfg.requerido) { <span class="cf-required">*</span> }
+                    </label>
+                    <textarea class="cf-textarea" formControlName="valor" rows="3" [placeholder]="cfg.descripcion"></textarea>
+                  </div>
+                }
+                @case ('list') {
+                  <div class="cf-field">
+                    <label class="cf-label">
+                      {{ cfg.descripcion }}
+                      @if (cfg.requerido) { <span class="cf-required">*</span> }
+                    </label>
+                    <div class="cf-select-wrapper">
+                      <select class="cf-select" formControlName="valor">
+                        <option value="">seleccionar</option>
+                        @for (opt of cfg.options; track opt) {
+                          <option [value]="opt">{{ opt }}</option>
+                        }
+                      </select>
+                      <ion-icon name="chevron-down-outline" class="cf-chevron"></ion-icon>
+                    </div>
+                  </div>
+                }
+                @case ('date') {
+                  <div class="cf-field">
+                    <label class="cf-label">
+                      {{ cfg.descripcion }}
+                      @if (cfg.requerido) { <span class="cf-required">*</span> }
+                    </label>
+                    <input class="cf-input" formControlName="valor" type="date">
+                  </div>
+                }
+                @default {
+                  <div class="cf-field">
+                    <label class="cf-label">
+                      {{ cfg.descripcion }}
+                      @if (cfg.requerido) { <span class="cf-required">*</span> }
+                    </label>
+                    <input
+                      class="cf-input"
+                      formControlName="valor"
+                      [type]="campoGroup(i).get('tipo')?.value === 'number' || campoGroup(i).get('tipo')?.value === 'currency' ? 'number' : 'text'"
+                      [placeholder]="cfg.descripcion"
+                      autocomplete="off">
+                  </div>
+                }
+              }
+            </div>
+          }
         </div>
 
         <!-- Credenciales -->

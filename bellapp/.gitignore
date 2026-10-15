@@ -47,3 +47,6 @@ Thumbs.db
 # Capacitor
 .capacitor/
 
+# Android signing key
+expertaspro.jks
+

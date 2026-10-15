@@ -3,6 +3,12 @@
   --background: #f4f4f8;
 }
 
+.clients-infinite {
+  display: block;
+  height: 8px;
+  background: #ffffff;
+}
+
 .action-buttons {
   padding: 1rem 1rem 0.5rem;
   display: flex;
@@ -78,6 +84,86 @@
   border: none;
   border-top: 1px solid #e2e8f0;
   margin: 0;
+}
+
+.client-search {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0.85rem 1rem 0.15rem;
+  padding: 0 0.75rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 10px;
+  background: #ffffff;
+
+  &:focus-within {
+    border-color: var(--ion-color-primary);
+  }
+
+  > ion-icon {
+    flex-shrink: 0;
+    font-size: 1.15rem;
+    color: #64748b;
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 0.7rem 0;
+    font-size: 0.9rem;
+    color: #1e293b;
+    font-family: inherit;
+
+    &::placeholder {
+      color: #94a3b8;
+    }
+
+    &::-webkit-search-cancel-button,
+    &::-webkit-search-decoration {
+      -webkit-appearance: none;
+      appearance: none;
+    }
+  }
+}
+
+.search-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  ion-icon {
+    font-size: 1.1rem;
+  }
+}
+
+.clients-loader {
+  width: 42px;
+  height: 42px;
+}
+
+.clients-loading-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 1rem 1rem 1.25rem;
+
+  p {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.85rem;
+  }
 }
 
 .empty-state {
@@ -246,6 +332,36 @@
   font-size: 1.1rem;
   color: #64748b;
   pointer-events: none;
+}
+
+.cf-fields-loading {
+  margin: 0.8rem 1rem 0;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.cf-yesno {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+
+  label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.95rem;
+    color: #1e293b;
+  }
+
+  input {
+    width: 1.05rem;
+    height: 1.05rem;
+    accent-color: #2563eb;
+  }
+}
+
+.cf-which {
+  margin-top: 0.65rem;
 }
 
 /* Section label */

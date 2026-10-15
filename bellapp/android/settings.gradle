@@ -1,3 +1,9 @@
+def localBuildRoot = new File(System.getenv("LOCALAPPDATA") ?: System.getProperty("java.io.tmpdir"), "expertaspro-android-build")
+
+gradle.beforeProject { project ->
+    project.layout.buildDirectory.set(new File(localBuildRoot, project.name))
+}
+
 include ':app'
 include ':capacitor-cordova-android-plugins'
 project(':capacitor-cordova-android-plugins').projectDir = new File('./capacitor-cordova-android-plugins/')
